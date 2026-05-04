@@ -1,0 +1,40 @@
+security:
+    enable_authenticator_manager: true
+    
+    password_hashers:
+        App\Entity\User:
+            algorithm: bcrypt
+
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: emailAddress
+
+    firewalls:
+        login:
+            pattern: ^/api/login
+            stateless: true
+            json_login:
+                check_path: /api/login
+                username_path: emailAddress
+                password_path: password
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+
+        register:
+            pattern: ^/register
+            stateless: true
+            security: false
+
+        api:
+            pattern: ^/api
+            stateless: true
+            custom_authenticators:
+                - lexik_jwt_authentication.jwt_token_authenticator
+
+    access_control:
+        - { path: ^/register, roles: PUBLIC_ACCESS }
+        - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/api, roles: ROLE_USER }
