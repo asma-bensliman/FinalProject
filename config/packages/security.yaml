@@ -1,6 +1,4 @@
 security:
-    enable_authenticator_manager: true
-    
     password_hashers:
         App\Entity\User:
             algorithm: bcrypt
@@ -30,11 +28,12 @@ security:
         api:
             pattern: ^/api
             stateless: true
-            custom_authenticators:
-                - lexik_jwt_authentication.jwt_token_authenticator
+            guard:
+                authenticators:
+                    - lexik_jwt_authentication.jwt_token_authenticator
 
     access_control:
         - { path: ^/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
-        - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/api/admin, roles: ROLE_ADMIN }
         - { path: ^/api, roles: ROLE_USER }
