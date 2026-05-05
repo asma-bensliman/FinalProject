@@ -64,8 +64,13 @@ class PlayerController extends AbstractController
     }
 
     #[Route('/api/players/{id}', name: 'player_show', methods: ['GET'])]
-    public function show(User $user): JsonResponse
+    public function show(int $id, UserRepository $userRepository): JsonResponse
     {
+        $user = $userRepository->find($id);
+        if (!$user) {
+            return $this->json(['error' => 'Player not found'], 404);
+        }
+
         return $this->json([
             'id' => $user->getId(),
             'firstName' => $user->getFirstName(),
@@ -78,11 +83,17 @@ class PlayerController extends AbstractController
 
     #[Route('/api/players/{id}', name: 'player_update', methods: ['PUT'])]
     public function update(
-        User $user,
+        int $id,
         Request $request,
+        UserRepository $userRepository,
         EntityManagerInterface $em,
         UserPasswordHasherInterface $passwordHasher
     ): JsonResponse {
+        $user = $userRepository->find($id);
+        if (!$user) {
+            return $this->json(['error' => 'Player not found'], 404);
+        }
+
         $data = json_decode($request->getContent(), true);
 
         if (isset($data['firstName'])) $user->setFirstName($data['firstName']);
@@ -107,8 +118,13 @@ class PlayerController extends AbstractController
     }
 
     #[Route('/api/players/{id}', name: 'player_delete', methods: ['DELETE'])]
-    public function delete(User $user, EntityManagerInterface $em): JsonResponse
+    public function delete(int $id, UserRepository $userRepository, EntityManagerInterface $em): JsonResponse
     {
+        $user = $userRepository->find($id);
+        if (!$user) {
+            return $this->json(['error' => 'Player not found'], 404);
+        }
+
         $em->remove($user);
         $em->flush();
 
