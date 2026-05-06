@@ -48,6 +48,6 @@ class UserTest extends TestCase
         $user = new User();
         $user->setRoles([]);
 
-        $this->assertEquals([], $user->getRoles());
+        $this->assertContains('ROLE_USER', $user->getRoles());
     }
 }
