@@ -15,7 +15,7 @@ class SportMatch
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'games')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Tournament $tournament = null;
 
     #[ORM\ManyToOne]

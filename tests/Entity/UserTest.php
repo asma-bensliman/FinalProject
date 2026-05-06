@@ -29,9 +29,9 @@ class UserTest extends TestCase
     public function testUserIdentifier(): void
     {
         $user = new User();
-        $user->setEmailAddress('john@test.com');
+        $user->setUsername('johndoe');
 
-        $this->assertEquals('john@test.com', $user->getUserIdentifier());
+        $this->assertEquals('johndoe', $user->getUserIdentifier());
     }
 
     public function testEraseCredentials(): void
