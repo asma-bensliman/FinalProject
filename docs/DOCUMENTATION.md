@@ -275,7 +275,7 @@ $env:OPENSSL_CONF = "C:\wamp64\bin\php\php8.2.29\extras\ssl\openssl.cnf"
 symfony serve
 ```
 
-Le serveur est accessible à l'adresse : `http://localhost:8000`
+Le serveur est accessible à l'adresse : `https://127.0.0.1:8000`
 
 ---
 
@@ -302,7 +302,7 @@ Représente un utilisateur de la plateforme (joueur ou administrateur).
 
 **Méthodes notables** :
 ```php
-public function getUserIdentifier(): string // Retourne emailAddress
+public function getUserIdentifier(): string // Retourne username
 public function eraseCredentials(): void     // Nettoyage des credentials
 public function getSalt(): ?string          // Retourne null (bcrypt n'utilise pas de salt externe)
 public function getRoles(): array           // Retourne les rôles de l'utilisateur
@@ -635,7 +635,12 @@ Content-Type: application/json
 }
 ```
 
-**Réponse 404** : Retourné si le tournoi n'existe pas (injection automatique de l'entité par Doctrine)
+**Réponse 404** :
+```json
+{
+    "error": "Tournament not found"
+}
+```
 
 #### PUT `/api/tournaments/{id}` — Modifier un tournoi
 
@@ -673,7 +678,7 @@ Content-Type: application/json
 ```
 
 **Notes** :
-- Attention : la suppression d'un tournoi peut entraîner la suppression en cascade des matchs associés (relation OneToMany)
+- La suppression d'un tournoi entraîne la suppression en cascade de toutes ses inscriptions et matchs associés (ON DELETE CASCADE)
 
 ---
 
@@ -1106,7 +1111,7 @@ php bin/phpunit
 | Test | Description | Assertions |
 |------|-------------|------------|
 | `testUserCreation` | Vérifie la création d'un utilisateur avec toutes ses propriétés | 6 assertions |
-| `testUserIdentifier` | Vérifie que `getUserIdentifier()` retourne l'adresse email | 1 assertion |
+| `testUserIdentifier` | Vérifie que `getUserIdentifier()` retourne le username | 1 assertion |
 | `testEraseCredentials` | Vérifie que `eraseCredentials()` ne supprime pas le mot de passe | 1 assertion |
 | `testDefaultRoles` | Vérifie que les rôles par défaut sont vides | 1 assertion |
 
@@ -1257,36 +1262,6 @@ php bin/console cache:clear
 
 # Afficher les informations de la base de données
 php bin/console doctrine:query:sql "SELECT * FROM user"
-```
-
-### B. Exemples de requêtes cURL
-
-#### Inscription
-```bash
-curl -X POST http://localhost:8000/register \
-  -H "Content-Type: application/json" \
-  -d '{"firstName":"John","lastName":"Doe","username":"johndoe","emailAddress":"john@example.com","password":"password123"}'
-```
-
-#### Connexion
-```bash
-curl -X POST http://localhost:8000/api/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"johndoe","password":"password123"}'
-```
-
-#### Créer un tournoi (avec token)
-```bash
-curl -X POST http://localhost:8000/api/tournaments \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <votre_token_jwt>" \
-  -d '{"tournamentName":"Mon Tournoi","startDate":"2026-06-01","endDate":"2026-06-10","description":"Description","sport":"Football","maxParticipants":16}'
-```
-
-#### Liste des tournois
-```bash
-curl -X GET http://localhost:8000/api/tournaments \
-  -H "Authorization: Bearer <votre_token_jwt>"
 ```
 
 ### C. Dépendances principales (composer.json)
