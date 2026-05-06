@@ -44,7 +44,7 @@ class Tournament
     #[ORM\ManyToOne]
     private ?User $winner = null;
 
-    #[ORM\OneToMany(mappedBy: 'tournament', targetEntity: SportMatch::class, cascade: ['remove'], orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'tournament', targetEntity: SportMatch::class)]
     private Collection $games;
 
     public function __construct()
