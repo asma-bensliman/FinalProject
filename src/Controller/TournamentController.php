@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Entity\Registration;
+use App\Entity\SportMatch;
 use App\Entity\Tournament;
 use App\Repository\TournamentRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -103,11 +105,13 @@ class TournamentController extends AbstractController
     }
 
     #[Route('/api/tournaments/{id}', name: 'tournament_delete', methods: ['DELETE'])]
-    public function delete(Tournament $tournament, EntityManagerInterface $em): JsonResponse
+    public function delete(int $id, EntityManagerInterface $em): JsonResponse
     {
-        $em->remove($tournament);
-        $em->flush();
-
-        return $this->json(['message' => 'Tournament deleted successfully']);
+        try {
+            $em->getConnection()->executeStatement('DELETE FROM tournament WHERE id = ?', [$id]);
+            return $this->json(['message' => 'Tournament deleted successfully']);
+        } catch (\Exception $e) {
+            return $this->json(['error' => $e->getMessage()], 500);
+        }
     }
 }
