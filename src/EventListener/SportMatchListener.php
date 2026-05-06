@@ -28,19 +28,19 @@ class SportMatchListener implements EventSubscriberInterface
         $match = $event->getMatch();
         $updatedBy = $event->getUpdatedBy();
 
-        // Déterminer l'adversaire
         if ($updatedBy->getId() === $match->getPlayer1()->getId()) {
             $opponent = $match->getPlayer2();
         } else {
             $opponent = $match->getPlayer1();
         }
 
-        // Notification à l'adversaire
-        $this->logger->info(sprintf(
+        $message = sprintf(
             'NOTIFICATION → %s : %s a mis à jour son score. Veuillez remplir le vôtre !',
             $opponent->getUsername(),
             $updatedBy->getUsername()
-        ));
+        );
+
+        file_put_contents(__DIR__ . '/../../var/log/notifications.log', $message . PHP_EOL, FILE_APPEND);
     }
 
     public function onTournamentWon(TournamentWonEvent $event): void
@@ -48,7 +48,6 @@ class SportMatchListener implements EventSubscriberInterface
         $tournament = $event->getTournament();
         $winner = $event->getWinner();
 
-        // Récupérer tous les participants
         $registrations = $this->registrationRepository->findBy([
             'tournament' => $tournament,
             'status' => 'confirmed'
@@ -56,12 +55,13 @@ class SportMatchListener implements EventSubscriberInterface
 
         foreach ($registrations as $registration) {
             $player = $registration->getPlayer();
-            $this->logger->info(sprintf(
+            $message = sprintf(
                 'NOTIFICATION → %s : Le tournoi "%s" est terminé ! Le vainqueur est %s !',
                 $player->getUsername(),
                 $tournament->getTournamentName(),
                 $winner->getUsername()
-            ));
+            );
+            file_put_contents(__DIR__ . '/../../var/log/notifications.log', $message . PHP_EOL, FILE_APPEND);
         }
     }
 }

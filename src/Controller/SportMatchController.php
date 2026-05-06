@@ -7,8 +7,11 @@ use App\Repository\SportMatchRepository;
 use App\Repository\TournamentRepository;
 use App\Repository\UserRepository;
 use App\Repository\RegistrationRepository;
+use App\Event\ScoreUpdatedEvent;
+use App\Event\TournamentWonEvent;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -17,7 +20,7 @@ class SportMatchController extends AbstractController
 {
     // GET - Liste des matchs d'un tournoi
     #[Route('/api/tournaments/{id}/sport-matchs', name: 'get_sport_matchs', methods: ['GET'])]
-    public function index(int $id, TournamentRepository $tournamentRepository, SportMatchRepository $sportMatchRepository): JsonResponse
+    public function index(string $id, TournamentRepository $tournamentRepository, SportMatchRepository $sportMatchRepository): JsonResponse
     {
         $tournament = $tournamentRepository->find($id);
 
@@ -42,10 +45,10 @@ class SportMatchController extends AbstractController
         return $this->json($data);
     }
 
-        // POST - Créer un match
+    // POST - Créer un match
     #[Route('/api/tournaments/{id}/sport-matchs', name: 'create_sport_match', methods: ['POST'])]
     public function create(
-        int $id,
+        string $id,
         Request $request,
         TournamentRepository $tournamentRepository,
         UserRepository $userRepository,
@@ -103,12 +106,11 @@ class SportMatchController extends AbstractController
         ], 201);
     }
 
-        // GET - Détails d'un match
+    // GET - Détails d'un match
     #[Route('/api/tournaments/{idTournament}/sport-matchs/{idSportMatch}', name: 'get_sport_match', methods: ['GET'])]
     public function show(
         string $idTournament,
         string $idSportMatch,
-
         TournamentRepository $tournamentRepository,
         SportMatchRepository $sportMatchRepository
     ): JsonResponse {
@@ -146,7 +148,8 @@ class SportMatchController extends AbstractController
         Request $request,
         TournamentRepository $tournamentRepository,
         SportMatchRepository $sportMatchRepository,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        EventDispatcherInterface $dispatcher
     ): JsonResponse {
         $tournament = $tournamentRepository->find($idTournament);
 
@@ -167,7 +170,6 @@ class SportMatchController extends AbstractController
         $currentUser = $this->getUser();
         $isAdmin = in_array('ROLE_ADMIN', $currentUser->getRoles());
 
-        // Vérifier que le joueur ne peut modifier que son propre score
         if (!$isAdmin) {
             if ($currentUser->getId() === $match->getPlayer1()->getId()) {
                 if (isset($data['scorePlayer1'])) {
@@ -180,8 +182,11 @@ class SportMatchController extends AbstractController
             } else {
                 return $this->json(['message' => 'Vous ne pouvez pas modifier ce match'], 403);
             }
+
+            // Déclencher la notification
+            $dispatcher->dispatch(new ScoreUpdatedEvent($match, $currentUser), ScoreUpdatedEvent::NAME);
         } else {
-            // Admin peut tout modifier
+            // Admin peut tout modifier sans notification
             if (isset($data['scorePlayer1'])) $match->setScorePlayer1($data['scorePlayer1']);
             if (isset($data['scorePlayer2'])) $match->setScorePlayer2($data['scorePlayer2']);
         }
@@ -208,7 +213,6 @@ class SportMatchController extends AbstractController
     public function delete(
         string $idTournament,
         string $idSportMatch,
-
         TournamentRepository $tournamentRepository,
         SportMatchRepository $sportMatchRepository,
         EntityManagerInterface $em
