@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\RegistrationRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: RegistrationRepository::class)]
 class Registration
@@ -19,13 +20,14 @@ class Registration
     private ?User $player = null;
 
     #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Tournament $tournament = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTimeInterface $registrationDate = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\Choice(choices: ['en attente', 'validée', 'refusée'], message: 'Statut invalide.')]
     private ?string $status = null;
 
     public function getId(): ?int

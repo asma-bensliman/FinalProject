@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Entity\Registration;
+use App\Entity\SportMatch;
 use App\Entity\Tournament;
 use App\Repository\TournamentRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -63,8 +65,13 @@ class TournamentController extends AbstractController
     }
 
     #[Route('/api/tournaments/{id}', name: 'tournament_show', methods: ['GET'])]
-    public function show(Tournament $tournament): JsonResponse
+    public function show(int $id, EntityManagerInterface $em): JsonResponse
     {
+        $tournament = $em->getRepository(Tournament::class)->find($id);
+        if (!$tournament) {
+            return $this->json(['error' => 'Tournament not found'], 404);
+        }
+
         return $this->json([
             'id' => $tournament->getId(),
             'tournamentName' => $tournament->getTournamentName(),
@@ -81,8 +88,13 @@ class TournamentController extends AbstractController
     }
 
     #[Route('/api/tournaments/{id}', name: 'tournament_update', methods: ['PUT'])]
-    public function update(Tournament $tournament, Request $request, EntityManagerInterface $em): JsonResponse
+    public function update(int $id, Request $request, EntityManagerInterface $em): JsonResponse
     {
+        $tournament = $em->getRepository(Tournament::class)->find($id);
+        if (!$tournament) {
+            return $this->json(['error' => 'Tournament not found'], 404);
+        }
+
         $data = json_decode($request->getContent(), true);
 
         if (isset($data['tournamentName'])) $tournament->setTournamentName($data['tournamentName']);
@@ -103,11 +115,13 @@ class TournamentController extends AbstractController
     }
 
     #[Route('/api/tournaments/{id}', name: 'tournament_delete', methods: ['DELETE'])]
-    public function delete(Tournament $tournament, EntityManagerInterface $em): JsonResponse
+    public function delete(int $id, EntityManagerInterface $em): JsonResponse
     {
-        $em->remove($tournament);
-        $em->flush();
-
-        return $this->json(['message' => 'Tournament deleted successfully']);
+        try {
+            $em->getConnection()->executeStatement('DELETE FROM tournament WHERE id = ?', [$id]);
+            return $this->json(['message' => 'Tournament deleted successfully']);
+        } catch (\Exception $e) {
+            return $this->json(['error' => $e->getMessage()], 500);
+        }
     }
 }
