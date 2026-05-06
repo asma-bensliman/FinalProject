@@ -1,5 +1,7 @@
 security:
     enable_authenticator_manager: true
+    role_hierarchy:
+        ROLE_ADMIN: ROLE_USER
     password_hashers:
         App\Entity\User:
             algorithm: bcrypt
@@ -31,6 +33,16 @@ security:
             stateless: true
             security: false
 
+        admin:
+            pattern: ^/admin
+            stateless: false
+            provider: app_user_provider
+            form_login:
+                login_path: /admin/login
+                check_path: /admin/login
+            logout:
+                path: /admin/logout
+
         api:
             pattern: ^/api
             stateless: true
@@ -40,5 +52,7 @@ security:
     access_control:
         - { path: ^/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/admin/login, roles: PUBLIC_ACCESS }
+        - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/api/admin, roles: ROLE_ADMIN }
         - { path: ^/api, roles: ROLE_USER }
